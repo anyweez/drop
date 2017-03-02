@@ -2,15 +2,23 @@ const Hapi = require('hapi');
 const Inert = require('inert');
 const Nes = require('nes');
 const fs = require('fs');
+const yargs = require('yargs')
+    .usage('Usage: $0 --dir [string] --ttl [num]')
+    .default('dir', 'storage')
+    .default('ttl', 60)
+    .argv;
 
 const Events = require('./events');
-const FILE_STORAGE_DIRECTORY = 'storage';
-const SECONDS_LIFETIME = 30;
+const FILE_STORAGE_DIRECTORY = yargs.dir;
+const SECONDS_LIFETIME = yargs.ttl;
 
 let next_id = 0;
 
 const noop = () => { };
 const log = msg => console.log(`[${new Date().toISOString()}] ${msg}`);
+
+log(`Config: Writing dropped files to public/${FILE_STORAGE_DIRECTORY}`);
+log(`Config: Deleting after ${SECONDS_LIFETIME} seconds`);
 
 function DropFile(raw) {
     this.id = next_id++;
@@ -109,5 +117,5 @@ server.start(err => {
         }
     }, 5000);
 
-    console.log(`Drop server ready.`);
+    log(`Drop server ready.`);
 });

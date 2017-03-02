@@ -20,7 +20,8 @@
   "dependencies": {
     "hapi": "^16.1.0",
     "inert": "^4.1.0",
-    "nes": "^6.4.0"
+    "nes": "^6.4.0",
+    "yargs": "^6.6.0"
   },
   "devDependencies": {
     "foundation-sites": "^6.3.1",
