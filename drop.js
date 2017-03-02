@@ -9,6 +9,9 @@ const SECONDS_LIFETIME = 30;
 
 let next_id = 0;
 
+const noop = () => { };
+const log = msg => console.log(`[${new Date().toISOString()}] ${msg}`);
+
 function DropFile(raw) {
     this.id = next_id++;
     // The user-facing name of the file.
@@ -31,7 +34,17 @@ server.connection({
 
 server.register(Inert);
 server.register(Nes, () => {
-    server.subscription('/files/updates');
+    server.subscription('/files/updates', {
+        onSubscribe(socket, path, params, next) {
+            log('New connection');
+
+            active_files.forEach(file => {
+                socket.publish(path, Events.Add(file), () => {});
+            });
+
+            next();
+        }
+    });
 });
 
 /**
@@ -52,6 +65,7 @@ server.route({
             server.publish('/files/updates', Events.Add(file));
         });
 
+        log(`Adding file '${file.name}`);
         reply();
     },
     config: {
@@ -81,8 +95,11 @@ server.start(err => {
     setInterval(() => {
         for (let i = 0; i < active_files.length; i++) {
             if (Date.now() > Date.parse(active_files[i].expires)) {
+                log(`Deleting file '${active_files[i].name}`);
                 // Delete the file.
-                fs.unlink(active_files[i].download_path);
+                try {
+                    fs.unlink(active_files[i].download_path, noop);
+                } catch (e) { }
                 // Let all clients know.
                 server.publish('/files/updates', Events.Expire(active_files[i]));
                 // Remove it from the active files array.
