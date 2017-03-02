@@ -80,6 +80,7 @@ server.route({
         payload: {
             output: 'file',
             maxBytes: 2147483648, // 2gb
+            timeout: false,
         },
     }
 });
