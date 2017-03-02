@@ -1,0 +1,33 @@
+{
+  "name": "drop",
+  "version": "1.0.0",
+  "description": "Easy LAN file sharing.",
+  "main": "drop.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anyweez/drop.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/anyweez/drop/issues"
+  },
+  "homepage": "https://github.com/anyweez/drop#readme",
+  "dependencies": {
+    "hapi": "^16.1.0",
+    "inert": "^4.1.0",
+    "nes": "^6.4.0"
+  },
+  "devDependencies": {
+    "foundation-sites": "^6.3.1",
+    "gulp": "^3.9.1",
+    "gulp-browser": "^3.0.4",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.4.1",
+    "gulp-watch": "^4.3.11"
+  }
+}
