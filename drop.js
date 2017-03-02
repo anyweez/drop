@@ -44,7 +44,7 @@ server.register(Inert);
 server.register(Nes, () => {
     server.subscription('/files/updates', {
         onSubscribe(socket, path, params, next) {
-            log('New connection');
+            log('New connection accepted');
 
             active_files.forEach(file => {
                 socket.publish(path, Events.Add(file), () => {});
@@ -66,7 +66,7 @@ server.route({
         const file = new DropFile(raw);
 
         const orig = fs.createReadStream(raw.path);
-        const perm = fs.createWriteStream(file.download_path);
+        const perm = fs.createWriteStream(`public/${file.download_path}`);
 
         orig.pipe(perm).on('finish', () => {
             active_files.push(file);
