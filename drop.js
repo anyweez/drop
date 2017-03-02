@@ -73,13 +73,13 @@ server.route({
             server.publish('/files/updates', Events.Add(file));
         });
 
-        log(`Adding file '${file.name}`);
+        log(`Adding file '${file.name}'`);
         reply();
     },
     config: {
         payload: {
             output: 'file',
-            maxBytes: 209715200,
+            maxBytes: 2147483648, // 2gb
         },
     }
 });
@@ -103,7 +103,7 @@ server.start(err => {
     setInterval(() => {
         for (let i = 0; i < active_files.length; i++) {
             if (Date.now() > Date.parse(active_files[i].expires)) {
-                log(`Deleting file '${active_files[i].name}`);
+                log(`Deleting file '${active_files[i].name}'`);
                 // Delete the file.
                 try {
                     fs.unlink(active_files[i].download_path, noop);
