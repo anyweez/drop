@@ -15,7 +15,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const drop_drop_msg = document.querySelector('.drop .drop-msg');
     const drop_file_list = document.querySelector('.drop .file-list');
 
-    const client = new Nes.Client('ws://localhost:8080');
+    const client = new Nes.Client(`ws://${location.host}`);
     const file_list = [];
 
     // Connect to the updates websocket and wait for events. Update the 
