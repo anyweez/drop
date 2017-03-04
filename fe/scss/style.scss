@@ -81,4 +81,9 @@ main .file-list {
     li:nth-of-type(odd) {
         background-color: lighten($page-background, 60%);
     }
+
+    li.in-progress {
+        font-style: italic;
+        opacity: 0.7;
+    }
 }

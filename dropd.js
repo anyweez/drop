@@ -10,6 +10,7 @@ const yargs = require('yargs')
 
 const Events = require('./events');
 const FILE_STORAGE_DIRECTORY = yargs.dir;
+const APPLICATION_STORAGE_DIR = 'public/storage';
 const SECONDS_LIFETIME = parseInt(yargs.ttl) === 0 ? null : parseInt(yargs.ttl);
 
 let next_id = 0;
@@ -17,9 +18,35 @@ let next_id = 0;
 const noop = () => { };
 const log = msg => console.log(`[${new Date().toISOString()}] ${msg}`);
 
-log(`Config: Writing dropped files to public/${FILE_STORAGE_DIRECTORY}`);
+log(`Config: Writing dropped files to ${FILE_STORAGE_DIRECTORY}`);
 if (SECONDS_LIFETIME) log(`Config: Deleting after ${SECONDS_LIFETIME} seconds`);
 else log(`Config: File deletion disabled`)
+
+// If the user-specified storage directory doesn't exist we can't do much. Exit.
+if (!fs.existsSync(FILE_STORAGE_DIRECTORY)) {
+    log('Error: the specified storage dir does not exist.');
+    process.exit(1);
+}
+
+// Remove and recreate symlinks to make sure they're fresh. No big deal if it 
+// doesn't exist yet (normal for first-run for example).
+try {
+    fs.unlinkSync(APPLICATION_STORAGE_DIR, noop);
+    log('Setup: removed existing symlink. Remaking...');
+} catch (e) {
+    log('Setup: no storage symlink exists; creating one...');
+}
+
+try {
+    fs.symlinkSync(FILE_STORAGE_DIRECTORY, `./${APPLICATION_STORAGE_DIR}`, 'dir');
+    log('Setup: symlink established');
+} catch (e) {
+    // TODO: potential errors that we need to catch here. 
+    log(`Error: couldn't create symlink to storage directory:`);
+    console.error(e);
+
+    process.exit(1);
+}
 
 function DropFile(raw) {
     this.id = next_id++;
@@ -32,7 +59,7 @@ function DropFile(raw) {
         this.expires = null;
     }
     // Convertible into URL in frontend.
-    this.download_path = `${FILE_STORAGE_DIRECTORY}/${raw.filename}`;
+    this.download_path = `${APPLICATION_STORAGE_DIR}/${raw.filename}`;
 
     return this;
 }
@@ -52,7 +79,7 @@ server.register(Nes, () => {
             log('New connection accepted');
 
             active_files.forEach(file => {
-                socket.publish(path, Events.Add(file), () => {});
+                socket.publish(path, Events.Add(file), () => { });
             });
 
             next();
@@ -71,7 +98,7 @@ server.route({
         const file = new DropFile(raw);
 
         const orig = fs.createReadStream(raw.path);
-        const perm = fs.createWriteStream(`public/${file.download_path}`);
+        const perm = fs.createWriteStream(file.download_path);
 
         orig.pipe(perm).on('finish', () => {
             active_files.push(file);
@@ -106,6 +133,7 @@ server.start(err => {
         process.exit(1);
     }
 
+    /* Check every five seconds for files that need to be deleted. */
     setInterval(() => {
         for (let i = 0; i < active_files.length; i++) {
             const current = active_files[i];
