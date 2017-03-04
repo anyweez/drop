@@ -15,6 +15,9 @@
     "public/*.html",
     "public/*.css"
   ],
+  "bin": {
+    "dropd": "./dropd.js"
+  },
   "keywords": [],
   "author": "anyweez",
   "license": "ISC",
