@@ -1,22 +1,27 @@
 {
-  "name": "drop",
-  "version": "1.0.0",
+  "name": "dropd",
+  "version": "0.1.0",
   "description": "Easy LAN file sharing.",
-  "main": "drop.js",
+  "main": "dropd.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anyweez/drop.git"
+    "url": "git+https://github.com/anyweez/dropd.git"
   },
+  "files": [
+    "public/*.js",
+    "public/*.html",
+    "public/*.css"
+  ],
   "keywords": [],
-  "author": "",
+  "author": "anyweez",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/anyweez/drop/issues"
+    "url": "https://github.com/anyweez/dropd/issues"
   },
-  "homepage": "https://github.com/anyweez/drop#readme",
+  "homepage": "https://github.com/anyweez/dropd#readme",
   "dependencies": {
     "hapi": "^16.1.0",
     "inert": "^4.1.0",
