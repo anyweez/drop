@@ -103,19 +103,6 @@ server.route({
 });
 
 /**
- * Serve static frontend content. Dropped files themselves are not served from this endpoint.
- */
-server.route({
-    method: 'GET',
-    path: '/{path*}',
-    handler: {
-        directory: {
-            path: 'public',
-        },
-    },
-});
-
-/**
  * Serve dropped files. Hapi / Inert will limit this endpoint to only serve files from 
  * the specified file storage directory.
  */
@@ -130,7 +117,20 @@ server.route({
             confine: FILE_STORAGE_DIRECTORY,
         });
     },
-})
+});
+
+/**
+ * Serve static frontend content. Dropped files themselves are not served from this endpoint.
+ */
+server.route({
+    method: 'GET',
+    path: '/{path*}',
+    handler: {
+        directory: {
+            path: `${__dirname}/public`,
+        },
+    },
+});
 
 server.start(err => {
     if (err) {
