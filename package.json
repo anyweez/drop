@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/anyweez/dropd#readme",
   "dependencies": {
+    "boom": "^4.2.0",
     "hapi": "^16.1.0",
     "inert": "^4.1.0",
     "nes": "^6.4.0",

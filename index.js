@@ -2,6 +2,7 @@
 
 const Hapi = require('hapi');
 const Inert = require('inert');
+const Boom = require('boom');
 const Nes = require('nes');
 const fs = require('fs');
 const yargs = require('yargs')
@@ -116,9 +117,15 @@ server.route({
         const filename = req.params.filename;
         log(`Serving ${filename}`);
 
-        reply.file(filename, {
-            confine: FILE_STORAGE_DIRECTORY,
-        });
+        const allowed = active_files.find(f => f.name === filename) !== undefined;
+
+        if (allowed) {
+            reply.file(filename, {
+                confine: FILE_STORAGE_DIRECTORY,
+            });
+        } else {
+            reply(Boom.notFound('File does not exist.'));
+        }
     },
 });
 
