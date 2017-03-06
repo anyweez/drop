@@ -45,6 +45,9 @@ function DropFile(raw) {
     // Convertible into URL in frontend.
     this.download_path = `${PUBLIC_STORAGE_DIR}/${raw.filename}`;
     this.size_bytes = raw.bytes;
+    // If inactive, record shouldn't be discussed with the frontend.
+    // If inactive, should try to delete each cycle until its gone.
+    this.active = true;
 
     return this;
 }
@@ -143,17 +146,26 @@ server.start(err => {
         for (let i = 0; i < active_files.length; i++) {
             const current = active_files[i];
 
-            if (current.expires && Date.now() > Date.parse(current.expires)) {
+            // If this record is active and has an expiration date in the past, mark as inactive and 
+            // notify the frontend that it's gone. 
+            if (current.active && current.expires && Date.now() > Date.parse(current.expires)) {
                 log(`Deleting file '${current.name}'`);
-                // Delete the file.
-                try {
-                    fs.unlink(current.download_path, noop);
-                } catch (e) { }
+                current.active = false;
+
                 // Let all clients know.
                 server.publish('/files/updates', Events.Expire(current));
-                // Remove it from the active files array.
-                active_files.splice(i, 1);
-                i--;
+            }
+
+            // Try to collect garbage. If it doesn't work we'll try again next time.
+            if (!current.active) {
+                try {
+                    fs.unlink(current.download_path, noop);
+                    // Remove it from the active files array.
+                    active_files.splice(i, 1);
+                    i--;
+                } catch (e) {
+                    log(`Couldn't delete '${current.name}'; will try again later.`);
+                }
             }
         }
     }, 5000);
