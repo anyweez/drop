@@ -21,6 +21,7 @@
   "keywords": [],
   "author": "anyweez",
   "license": "ISC",
+  "preferGlobal": true,
   "bugs": {
     "url": "https://github.com/anyweez/dropd/issues"
   },
