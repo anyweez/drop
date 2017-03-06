@@ -11,8 +11,10 @@ const yargs = require('yargs')
     .argv;
 
 const Events = require('./events');
+// Absolute path to storage location.
 const FILE_STORAGE_DIRECTORY = yargs.dir;
-const APPLICATION_STORAGE_DIR = 'public/storage';
+// URL prefix added to all download paths.
+const PUBLIC_STORAGE_DIR = '_';
 const SECONDS_LIFETIME = parseInt(yargs.ttl) === 0 ? null : parseInt(yargs.ttl);
 
 let next_id = 0;
@@ -30,26 +32,6 @@ if (!fs.existsSync(FILE_STORAGE_DIRECTORY)) {
     process.exit(1);
 }
 
-// Remove and recreate symlinks to make sure they're fresh. No big deal if it 
-// doesn't exist yet (normal for first-run for example).
-try {
-    fs.unlinkSync(APPLICATION_STORAGE_DIR, noop);
-    log('Setup: removed existing symlink. Remaking...');
-} catch (e) {
-    log('Setup: no storage symlink exists; creating one...');
-}
-
-try {
-    fs.symlinkSync(FILE_STORAGE_DIRECTORY, `./${APPLICATION_STORAGE_DIR}`, 'dir');
-    log('Setup: symlink established');
-} catch (e) {
-    // TODO: potential errors that we need to catch here. 
-    log(`Error: couldn't create symlink to storage directory:`);
-    console.error(e);
-
-    process.exit(1);
-}
-
 function DropFile(raw) {
     this.id = next_id++;
     // The user-facing name of the file.
@@ -61,7 +43,7 @@ function DropFile(raw) {
         this.expires = null;
     }
     // Convertible into URL in frontend.
-    this.download_path = `${APPLICATION_STORAGE_DIR}/${raw.filename}`;
+    this.download_path = `${PUBLIC_STORAGE_DIR}/${raw.filename}`;
     this.size_bytes = raw.bytes;
 
     return this;
@@ -91,7 +73,7 @@ server.register(Nes, () => {
 });
 
 /**
- * File upload route. Copies 
+ * File upload route. Copies the file from temporary storage to FILE_STORAGE_DIRECTORY.
  */
 server.route({
     method: 'POST',
@@ -101,7 +83,7 @@ server.route({
         const file = new DropFile(raw);
 
         const orig = fs.createReadStream(raw.path);
-        const perm = fs.createWriteStream(file.download_path);
+        const perm = fs.createWriteStream(`${FILE_STORAGE_DIRECTORY}/${file.name}`);
 
         orig.pipe(perm).on('finish', () => {
             active_files.push(file);
@@ -120,6 +102,9 @@ server.route({
     }
 });
 
+/**
+ * Serve static frontend content. Dropped files themselves are not served from this endpoint.
+ */
 server.route({
     method: 'GET',
     path: '/{path*}',
@@ -129,6 +114,23 @@ server.route({
         },
     },
 });
+
+/**
+ * Serve dropped files. Hapi / Inert will limit this endpoint to only serve files from 
+ * the specified file storage directory.
+ */
+server.route({
+    method: 'GET',
+    path: `/${PUBLIC_STORAGE_DIR}/{filename}`,
+    handler(req, reply) {
+        const filename = req.params.filename;
+        log(`Serving ${filename}`);
+
+        reply.file(filename, {
+            confine: FILE_STORAGE_DIRECTORY,
+        });
+    },
+})
 
 server.start(err => {
     if (err) {
