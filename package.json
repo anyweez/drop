@@ -2,7 +2,7 @@
   "name": "dropd",
   "version": "0.2.2",
   "description": "Easy LAN file sharing.",
-  "main": "dropd.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,7 +16,7 @@
     "public/*.css"
   ],
   "bin": {
-    "dropd": "./dropd.js"
+    "dropd": "./index.js"
   },
   "keywords": [],
   "author": "anyweez",

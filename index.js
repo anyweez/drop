@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const Hapi = require('hapi');
 const Inert = require('inert');
 const Nes = require('nes');
