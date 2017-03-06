@@ -1,6 +1,6 @@
 {
   "name": "dropd",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Easy LAN file sharing.",
   "main": "index.js",
   "scripts": {
