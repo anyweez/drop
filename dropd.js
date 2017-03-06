@@ -9,8 +9,12 @@ const yargs = require('yargs')
     .argv;
 
 const Events = require('./events');
+// Absolute path to storage location.
 const FILE_STORAGE_DIRECTORY = yargs.dir;
-const APPLICATION_STORAGE_DIR = 'public/storage';
+// URL prefix added to all download paths.
+const PUBLIC_STORAGE_DIR = '_';
+// Local filesystem symlink to where files should be stored.
+const APPLICATION_STORAGE_DIR = `public/${PUBLIC_STORAGE_DIR}`;
 const SECONDS_LIFETIME = parseInt(yargs.ttl) === 0 ? null : parseInt(yargs.ttl);
 
 let next_id = 0;
@@ -38,7 +42,7 @@ try {
 }
 
 try {
-    fs.symlinkSync(FILE_STORAGE_DIRECTORY, `./${APPLICATION_STORAGE_DIR}`, 'dir');
+    fs.symlinkSync(FILE_STORAGE_DIRECTORY, APPLICATION_STORAGE_DIR, 'dir');
     log('Setup: symlink established');
 } catch (e) {
     // TODO: potential errors that we need to catch here. 
@@ -59,7 +63,7 @@ function DropFile(raw) {
         this.expires = null;
     }
     // Convertible into URL in frontend.
-    this.download_path = `${APPLICATION_STORAGE_DIR}/${raw.filename}`;
+    this.download_path = `${PUBLIC_STORAGE_DIR}/${raw.filename}`;
     this.size_bytes = raw.bytes;
 
     return this;
@@ -99,7 +103,7 @@ server.route({
         const file = new DropFile(raw);
 
         const orig = fs.createReadStream(raw.path);
-        const perm = fs.createWriteStream(file.download_path);
+        const perm = fs.createWriteStream(`${APPLICATION_STORAGE_DIR}/${file.name}`);
 
         orig.pipe(perm).on('finish', () => {
             active_files.push(file);
