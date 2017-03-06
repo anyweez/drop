@@ -62,11 +62,15 @@ main .file-list {
         list-style-type: none;
 
         p.filename {
-            @include grid-column(4);
+            @include grid-column(3);
+        }
+
+        p.size {
+            @include grid-column(2);
         }
 
         p.expires {
-            @include grid-column(6);
+            @include grid-column(3);
         }
 
         p.remove {

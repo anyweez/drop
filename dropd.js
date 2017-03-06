@@ -60,6 +60,7 @@ function DropFile(raw) {
     }
     // Convertible into URL in frontend.
     this.download_path = `${APPLICATION_STORAGE_DIR}/${raw.filename}`;
+    this.size_bytes = raw.bytes;
 
     return this;
 }

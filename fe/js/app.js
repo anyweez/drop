@@ -10,6 +10,20 @@ const show_hide = (show, hide) => {
     hide.classList.remove('show');
 };
 
+const as_filesize = bytes => {
+    const trunc = full => Math.round(full * 10) / 10;
+
+    const KILOBYTE = 1024;
+    const MEGABYTE = KILOBYTE * 1024;
+    const GIGABYTE = MEGABYTE * 1024;
+
+    if (bytes > GIGABYTE) return `${trunc(bytes / GIGABYTE)} GB`;
+    else if (bytes > MEGABYTE) return `${trunc(bytes / MEGABYTE)} MB`;
+    else if (bytes > KILOBYTE) return `${trunc(bytes / KILOBYTE)} KB`;
+    
+    return `${bytes} bytes`;
+};
+
 window.addEventListener('DOMContentLoaded', () => {
     const drop = document.querySelector('.drop');
     const drop_drop_msg = document.querySelector('.drop .drop-msg');
@@ -64,6 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
             const in_progress = {
                 name: file.name,
                 progress: 0.0,
+                size_bytes: file.size,
             };
 
             const request = new XMLHttpRequest();
@@ -89,8 +104,6 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }, false);
 
-    // show_hide(drop_file_list, drop_drop_msg);
-    // show_hide(drop_drop_msg, drop_file_list);
     render_files(file_list, in_progress_file_list);
 
     /**
@@ -111,6 +124,7 @@ window.addEventListener('DOMContentLoaded', () => {
               <i class="fa-file-o fa"></i>&nbsp;
               <a href="${item.download_path}">${item.name}</a>
             </p>
+            <p class="size">${as_filesize(item.size_bytes)}</p>
             <p class="expires">expires on ${item.expires}</p>
             <p class="remove">x</p>
         `;
@@ -127,6 +141,7 @@ window.addEventListener('DOMContentLoaded', () => {
               <i class="fa-file-o fa"></i>&nbsp;
               <span>${item.name}</span>
             </p>
+            <p class="size">${as_filesize(item.size_bytes)}</p>
             <p class="expires">dropping: ${item.progress}%</p>
             <p class="remove">x</p>
         `;
