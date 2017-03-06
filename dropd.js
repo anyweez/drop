@@ -13,8 +13,6 @@ const Events = require('./events');
 const FILE_STORAGE_DIRECTORY = yargs.dir;
 // URL prefix added to all download paths.
 const PUBLIC_STORAGE_DIR = '_';
-// Local filesystem symlink to where files should be stored.
-const APPLICATION_STORAGE_DIR = `public/${PUBLIC_STORAGE_DIR}`;
 const SECONDS_LIFETIME = parseInt(yargs.ttl) === 0 ? null : parseInt(yargs.ttl);
 
 let next_id = 0;
@@ -29,26 +27,6 @@ else log(`Config: File deletion disabled`)
 // If the user-specified storage directory doesn't exist we can't do much. Exit.
 if (!fs.existsSync(FILE_STORAGE_DIRECTORY)) {
     log('Error: the specified storage dir does not exist.');
-    process.exit(1);
-}
-
-// Remove and recreate symlinks to make sure they're fresh. No big deal if it 
-// doesn't exist yet (normal for first-run for example).
-try {
-    fs.unlinkSync(APPLICATION_STORAGE_DIR, noop);
-    log('Setup: removed existing symlink. Remaking...');
-} catch (e) {
-    log('Setup: no storage symlink exists; creating one...');
-}
-
-try {
-    fs.symlinkSync(FILE_STORAGE_DIRECTORY, APPLICATION_STORAGE_DIR, 'dir');
-    log('Setup: symlink established');
-} catch (e) {
-    // TODO: potential errors that we need to catch here. 
-    log(`Error: couldn't create symlink to storage directory:`);
-    console.error(e);
-
     process.exit(1);
 }
 
@@ -93,7 +71,7 @@ server.register(Nes, () => {
 });
 
 /**
- * File upload route. Copies 
+ * File upload route. Copies the file from temporary storage to FILE_STORAGE_DIRECTORY.
  */
 server.route({
     method: 'POST',
@@ -103,7 +81,7 @@ server.route({
         const file = new DropFile(raw);
 
         const orig = fs.createReadStream(raw.path);
-        const perm = fs.createWriteStream(`${APPLICATION_STORAGE_DIR}/${file.name}`);
+        const perm = fs.createWriteStream(`${FILE_STORAGE_DIRECTORY}/${file.name}`);
 
         orig.pipe(perm).on('finish', () => {
             active_files.push(file);
@@ -122,6 +100,9 @@ server.route({
     }
 });
 
+/**
+ * Serve static frontend content. Dropped files themselves are not served from this endpoint.
+ */
 server.route({
     method: 'GET',
     path: '/{path*}',
@@ -131,6 +112,23 @@ server.route({
         },
     },
 });
+
+/**
+ * Serve dropped files. Hapi / Inert will limit this endpoint to only serve files from 
+ * the specified file storage directory.
+ */
+server.route({
+    method: 'GET',
+    path: `/${PUBLIC_STORAGE_DIR}/{filename}`,
+    handler(req, reply) {
+        const filename = req.params.filename;
+        log(`Serving ${filename}`);
+
+        reply.file(filename, {
+            confine: FILE_STORAGE_DIRECTORY,
+        });
+    },
+})
 
 server.start(err => {
     if (err) {
